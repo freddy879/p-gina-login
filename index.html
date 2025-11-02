@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registro de Productos</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f5f5f5;
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 50px auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        h1, h2, h3 {
+            text-align: center;
+        }
+
+        form {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+
+        input {
+            padding: 10px;
+            font-size: 16px;
+            width: 200px;
+        }
+
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        th, td {
+            padding: 10px;
+            border: 1px solid #ccc;
+            text-align: center;
+        }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <div class="container">
+        <h1>Registro de Productos</h1>
+        <form id="productForm">
+            <input type="text" id="productName" placeholder="Nombre del producto" required>
+            <input type="number" id="productionCost" placeholder="Costo de producción" min="0" step="0.01" required>
+            <input type="number" id="saleCost" placeholder="Costo de venta" min="0" step="0.01" required>
+            <button type="submit">Agregar Producto</button>
+        </form>
+
+        <h2>Ganancia por día</h2>
+        <canvas id="profitChart"></canvas>
+
+        <h3>Registro de productos:</h3>
+        <table id="productTable">
+            <thead>
+                <tr>
+                    <th>Producto</th>
+                    <th>Costo Producción</th>
+                    <th>Costo Venta</th>
+                    <th>Ganancia</th>
+                    <th>Fecha</th>
+                </tr>
+            </thead>
+            <tbody>
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+        const form = document.getElementById('productForm');
+        const tableBody = document.querySelector('#productTable tbody');
+        const ctx = document.getElementById('profitChart').getContext('2d');
+
+        function getProducts() {
+            return JSON.parse(localStorage.getItem('products')) || [];
+        }
+
+        function saveProduct(product) {
+            const products = getProducts();
+            products.push(product);
+            localStorage.setItem('products', JSON.stringify(products));
+        }
+
+        function updateTable() {
+            tableBody.innerHTML = '';
+            const products = getProducts();
+            products.forEach(p => {
+                const row = `<tr>
+                    <td>${p.name}</td>
+                    <td>$${p.productionCost.toFixed(2)}</td>
+                    <td>$${p.saleCost.toFixed(2)}</td>
+                    <td>$${p.profit.toFixed(2)}</td>
+                    <td>${p.date}</td>
+                </tr>`;
+                tableBody.innerHTML += row;
+            });
+        }
+
+        let chart;
+        function updateChart() {
+            const products = getProducts();
+            const profitByDate = {};
+            products.forEach(p => {
+                if (!profitByDate[p.date]) profitByDate[p.date] = 0;
+                profitByDate[p.date] += p.profit;
+            });
+
+            const labels = Object.keys(profitByDate);
+            const data = Object.values(profitByDate);
+
+            if (chart) chart.destroy();
+
+            chart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Ganancia por día',
+                        data: data,
+                        backgroundColor: 'rgba(75, 192, 192, 0.7)',
+                        borderColor: 'rgba(75, 192, 192, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+        }
+
+        form.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const name = document.getElementById('productName').value;
+            const productionCost = parseFloat(document.getElementById('productionCost').value);
+            const saleCost = parseFloat(document.getElementById('saleCost').value);
+            const profit = saleCost - productionCost;
+            const date = new Date().toLocaleDateString();
+
+            const product = { name, productionCost, saleCost, profit, date };
+            saveProduct(product);
+
+            updateTable();
+            updateChart();
+            form.reset();
+        });
+
+        updateTable();
+        updateChart();
+    </script>
+</body>
+</html>
