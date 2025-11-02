@@ -1,182 +1,231 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Registro de Productos</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #f5f5f5;
-            margin: 0;
-            padding: 0;
-        }
-
-        .container {
-            max-width: 800px;
-            margin: 50px auto;
-            background: white;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-        }
-
-        h1, h2, h3 {
-            text-align: center;
-        }
-
-        form {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 10px;
-            justify-content: center;
-            margin-bottom: 20px;
-        }
-
-        input {
-            padding: 10px;
-            font-size: 16px;
-            width: 200px;
-        }
-
-        button {
-            padding: 10px 20px;
-            font-size: 16px;
-            cursor: pointer;
-            background-color: #4CAF50;
-            color: white;
-            border: none;
-            border-radius: 5px;
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 20px;
-        }
-
-        th, td {
-            padding: 10px;
-            border: 1px solid #ccc;
-            text-align: center;
-        }
-    </style>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Registro de Productos</title>
+<style>
+    body { font-family: Arial, sans-serif; background: #f5f5f5; margin: 0; padding: 0; }
+    .container { max-width: 900px; margin: 50px auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+    h1,h2,h3 { text-align: center; }
+    form { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin-bottom: 20px; }
+    input { padding: 10px; font-size: 16px; width: 200px; }
+    button { padding: 10px 20px; font-size: 16px; cursor: pointer; background-color: #4CAF50; color: white; border: none; border-radius: 5px; }
+    table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+    th, td { padding: 10px; border: 1px solid #ccc; text-align: center; }
+    .delete-btn { cursor: pointer; color: red; font-weight: bold; }
+    .totals { margin-top: 20px; text-align: center; }
+    select { padding: 5px; font-size: 16px; margin-bottom: 10px; }
+</style>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
-    <div class="container">
-        <h1>Registro de Productos</h1>
-        <form id="productForm">
-            <input type="text" id="productName" placeholder="Nombre del producto" required>
-            <input type="number" id="productionCost" placeholder="Costo de producción" min="0" step="0.01" required>
-            <input type="number" id="saleCost" placeholder="Costo de venta" min="0" step="0.01" required>
-            <button type="submit">Agregar Producto</button>
-        </form>
+<div class="container">
+    <h1>Registro de Productos</h1>
+    <form id="productForm">
+        <input type="text" id="productName" placeholder="Nombre del producto" required>
+        <input type="number" id="productionCost" placeholder="Costo de producción" min="0" step="0.01" required>
+        <input type="number" id="saleCost" placeholder="Costo de venta" min="0" step="0.01" required>
+        <button type="submit">Agregar Producto</button>
+    </form>
 
-        <h2>Ganancia por día</h2>
-        <canvas id="profitChart"></canvas>
+    <h2>Ganancias</h2>
+    <select id="timeFrame">
+        <option value="hour">Por hora</option>
+        <option value="day" selected>Por día</option>
+        <option value="month">Por mes</option>
+        <option value="year">Por año</option>
+    </select>
+    <canvas id="profitChart"></canvas>
 
-        <h3>Registro de productos:</h3>
-        <table id="productTable">
-            <thead>
-                <tr>
-                    <th>Producto</th>
-                    <th>Costo Producción</th>
-                    <th>Costo Venta</th>
-                    <th>Ganancia</th>
-                    <th>Fecha</th>
-                </tr>
-            </thead>
-            <tbody>
-            </tbody>
-        </table>
+    <h3>Registro de productos:</h3>
+    <table id="productTable">
+        <thead>
+            <tr>
+                <th>Producto</th>
+                <th>Costo Producción</th>
+                <th>Costo Venta</th>
+                <th>Ganancia</th>
+                <th>Fecha y Hora</th>
+                <th>Eliminar</th>
+            </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+
+    <div class="totals">
+        <p id="monthlyTotal">Total del mes: $0.00</p>
+        <p id="annualTotal">Total del año: $0.00</p>
+        <button id="exportCSV">Exportar CSV</button>
     </div>
+</div>
 
-    <script>
-        const form = document.getElementById('productForm');
-        const tableBody = document.querySelector('#productTable tbody');
-        const ctx = document.getElementById('profitChart').getContext('2d');
+<script>
+const form = document.getElementById('productForm');
+const tableBody = document.querySelector('#productTable tbody');
+const ctx = document.getElementById('profitChart').getContext('2d');
+const monthlyTotalEl = document.getElementById('monthlyTotal');
+const annualTotalEl = document.getElementById('annualTotal');
+const timeFrameSelect = document.getElementById('timeFrame');
 
-        function getProducts() {
-            return JSON.parse(localStorage.getItem('products')) || [];
+function getProducts() {
+    return JSON.parse(localStorage.getItem('products')) || [];
+}
+
+function saveProducts(products) {
+    localStorage.setItem('products', JSON.stringify(products));
+}
+
+function addProduct(product) {
+    const products = getProducts();
+    products.push(product);
+    saveProducts(products);
+}
+
+function deleteProduct(index) {
+    const products = getProducts();
+    products.splice(index, 1);
+    saveProducts(products);
+    updateTable();
+    updateChart();
+    updateTotals();
+}
+
+function formatDate(date) {
+    return date.toLocaleDateString() + ' ' + date.toLocaleTimeString();
+}
+
+function updateTable() {
+    tableBody.innerHTML = '';
+    const products = getProducts();
+    products.forEach((p, index) => {
+        const row = `<tr>
+            <td>${p.name}</td>
+            <td>$${p.productionCost.toFixed(2)}</td>
+            <td>$${p.saleCost.toFixed(2)}</td>
+            <td>$${p.profit.toFixed(2)}</td>
+            <td>${p.dateTime}</td>
+            <td><span class="delete-btn" onclick="deleteProduct(${index})">X</span></td>
+        </tr>`;
+        tableBody.innerHTML += row;
+    });
+}
+
+let chart;
+function updateChart() {
+    const products = getProducts();
+    const frame = timeFrameSelect.value;
+    const profitMap = {};
+
+    products.forEach(p => {
+        const d = new Date(p.dateISO);
+        let key;
+        switch(frame){
+            case 'hour':
+                key = `${d.getFullYear()}-${d.getMonth()+1}-${d.getDate()} ${d.getHours()}:00`;
+                break;
+            case 'day':
+                key = `${d.getFullYear()}-${d.getMonth()+1}-${d.getDate()}`;
+                break;
+            case 'month':
+                key = `${d.getFullYear()}-${d.getMonth()+1}`;
+                break;
+            case 'year':
+                key = `${d.getFullYear()}`;
+                break;
         }
+        if(!profitMap[key]) profitMap[key]=0;
+        profitMap[key] += p.profit;
+    });
 
-        function saveProduct(product) {
-            const products = getProducts();
-            products.push(product);
-            localStorage.setItem('products', JSON.stringify(products));
-        }
+    const labels = Object.keys(profitMap);
+    const data = Object.values(profitMap);
 
-        function updateTable() {
-            tableBody.innerHTML = '';
-            const products = getProducts();
-            products.forEach(p => {
-                const row = `<tr>
-                    <td>${p.name}</td>
-                    <td>$${p.productionCost.toFixed(2)}</td>
-                    <td>$${p.saleCost.toFixed(2)}</td>
-                    <td>$${p.profit.toFixed(2)}</td>
-                    <td>${p.date}</td>
-                </tr>`;
-                tableBody.innerHTML += row;
-            });
-        }
+    if(chart) chart.destroy();
+    chart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels,
+            datasets: [{
+                label: `Ganancia (${frame})`,
+                data,
+                backgroundColor: 'rgba(75, 192, 192, 0.7)',
+                borderColor: 'rgba(75, 192, 192, 1)',
+                borderWidth: 1
+            }]
+        },
+        options: { responsive:true, scales:{ y:{ beginAtZero:true } } }
+    });
+}
 
-        let chart;
-        function updateChart() {
-            const products = getProducts();
-            const profitByDate = {};
-            products.forEach(p => {
-                if (!profitByDate[p.date]) profitByDate[p.date] = 0;
-                profitByDate[p.date] += p.profit;
-            });
+function updateTotals() {
+    const products = getProducts();
+    const now = new Date();
+    const month = now.getMonth() + 1;
+    const year = now.getFullYear();
 
-            const labels = Object.keys(profitByDate);
-            const data = Object.values(profitByDate);
+    const monthlyTotal = products.reduce((sum,p)=>{
+        const d = new Date(p.dateISO);
+        return (d.getMonth()+1===month && d.getFullYear()===year) ? sum + p.profit : sum;
+    },0);
 
-            if (chart) chart.destroy();
+    const annualTotal = products.reduce((sum,p)=>{
+        const d = new Date(p.dateISO);
+        return (d.getFullYear()===year)? sum+p.profit : sum;
+    },0);
 
-            chart = new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels: labels,
-                    datasets: [{
-                        label: 'Ganancia por día',
-                        data: data,
-                        backgroundColor: 'rgba(75, 192, 192, 0.7)',
-                        borderColor: 'rgba(75, 192, 192, 1)',
-                        borderWidth: 1
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    scales: {
-                        y: {
-                            beginAtZero: true
-                        }
-                    }
-                }
-            });
-        }
+    monthlyTotalEl.textContent = `Total del mes: $${monthlyTotal.toFixed(2)}`;
+    annualTotalEl.textContent = `Total del año: $${annualTotal.toFixed(2)}`;
+}
 
-        form.addEventListener('submit', (e) => {
-            e.preventDefault();
-            const name = document.getElementById('productName').value;
-            const productionCost = parseFloat(document.getElementById('productionCost').value);
-            const saleCost = parseFloat(document.getElementById('saleCost').value);
-            const profit = saleCost - productionCost;
-            const date = new Date().toLocaleDateString();
+form.addEventListener('submit', e=>{
+    e.preventDefault();
+    const name = document.getElementById('productName').value;
+    const productionCost = parseFloat(document.getElementById('productionCost').value);
+    const saleCost = parseFloat(document.getElementById('saleCost').value);
+    const profit = saleCost - productionCost;
+    const now = new Date();
+    const product = {
+        name, productionCost, saleCost, profit,
+        dateTime: formatDate(now),
+        dateISO: now.toISOString()
+    };
+    addProduct(product);
+    updateTable();
+    updateChart();
+    updateTotals();
+    form.reset();
+});
 
-            const product = { name, productionCost, saleCost, profit, date };
-            saveProduct(product);
+timeFrameSelect.addEventListener('change', updateChart);
 
-            updateTable();
-            updateChart();
-            form.reset();
-        });
+// Exportar CSV
+document.getElementById('exportCSV').addEventListener('click', () => {
+    const products = getProducts();
+    if(products.length === 0) { alert("No hay productos para exportar."); return; }
 
-        updateTable();
-        updateChart();
-    </script>
+    let csvContent = "data:text/csv;charset=utf-8,";
+    csvContent += "Nombre,CostoProduccion,CostoVenta,Ganancia,FechaHora\n";
+
+    products.forEach(p => {
+        const row = [p.name, p.productionCost.toFixed(2), p.saleCost.toFixed(2), p.profit.toFixed(2), p.dateTime].join(",");
+        csvContent += row + "\n";
+    });
+
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", "registro_productos.csv");
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+});
+
+// Inicializar
+updateTable();
+updateChart();
+updateTotals();
+</script>
 </body>
 </html>
+
