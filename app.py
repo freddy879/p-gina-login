@@ -492,7 +492,6 @@ def stats():
 # =========================================
 # INICIAR SERVIDOR
 # =========================================
-
 if __name__ == "__main__":
     try:
         client.admin.command("ping")
