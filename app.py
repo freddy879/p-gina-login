@@ -17,7 +17,7 @@ CORS(app)
 # MONGODB ATLAS CONNECTION
 # =========================================
 
-MONGO_URI = "mongodb+srv://nexus_dri:freddy123@cluster0.np3mr9e.mongodb.net/?retryWrites=true&w=majority"
+MONGO_URI = os.getenv("MONGO_URI")
 DB_NAME = "nexus_drive"
 
 client = MongoClient(MONGO_URI)
@@ -496,7 +496,13 @@ def stats():
 if __name__ == "__main__":
     try:
         client.admin.command("ping")
-        print("✅ Conectado a MongoDB Atlas — Nexus Drive Enterprise 4.0")
+        print("✅ Conectado a MongoDB Atlas")
     except ConnectionFailure as e:
-        print(f"❌ Error de conexión a MongoDB: {e}")
-    app.run(host="0.0.0.0", port=5000, debug=True)
+        print(f"❌ Error MongoDB: {e}")
+
+    port = int(os.environ.get("PORT", 5000))
+
+    app.run(
+        host="0.0.0.0",
+        port=port
+    )
