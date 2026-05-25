@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -318,17 +317,15 @@ body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--t
     <div class="login-logo">NEXUS <span>DRIVE</span></div>
     <div class="login-sub">Enterprise File Management Platform</div>
     <label class="login-label">Usuario</label>
-    <input id="l-user" class="login-input" type="text" placeholder="usuario" value="admin">
+    <input id="l-user" class="login-input" type="text" placeholder="usuario" value="bellita78">
     <label class="login-label">Contraseña</label>
-    <input id="l-pass" class="login-input" type="password" placeholder="••••••••" value="admin123"
+    <input id="l-pass" class="login-input" type="password" placeholder="••••••••" value="bellita123"
            onkeydown="if(event.key==='Enter') doLogin()">
     <button class="login-btn" onclick="doLogin()">Iniciar sesión</button>
     <div id="login-err" class="login-err"></div>
     <div class="demo-users">
-      <p>Usuarios de prueba</p>
-      <span class="demo-chip" onclick="setDemo('admin','admin123')">admin / admin123</span>
-      <span class="demo-chip" onclick="setDemo('maria','maria123')">maria / maria123</span>
-      <span class="demo-chip" onclick="setDemo('carlos','carlos123')">carlos / carlos123</span>
+      <p>Acceso rápido</p>
+      <span class="demo-chip" onclick="setDemo('bellita78','bellita123')">bellita78 / bellita123</span>
     </div>
   </div>
 </div>
@@ -375,9 +372,9 @@ body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--t
       <div class="storage-text" id="storage-text">Calculando...</div>
       <div style="height:10px"></div>
       <div class="user-badge">
-        <div class="avatar" id="user-avatar">?</div>
+        <div class="avatar" id="user-avatar">BQ</div>
         <div>
-          <div class="user-info-name" id="user-name">Usuario</div>
+          <div class="user-info-name" id="user-name">Bellita Quiroz</div>
           <div class="user-info-role" id="user-role">—</div>
         </div>
         <button class="logout-btn" onclick="logout()" title="Cerrar sesión">
@@ -609,8 +606,11 @@ async function doLogin(){
       currentUser=data.user;
       document.getElementById("login-screen").style.display="none";
       document.getElementById("app").style.display="flex";
-      document.getElementById("user-avatar").textContent=data.user.avatar||data.user.username.substring(0,2).toUpperCase();
-      document.getElementById("user-name").textContent=data.user.username;
+      // Use "Bellita Quiroz" as display name if username is bellita78
+      const displayName = data.user.username === "bellita78" ? "Bellita Quiroz" : (data.user.fullname || data.user.username);
+      const initials = displayName.split(" ").map(w=>w[0]).join("").substring(0,2).toUpperCase();
+      document.getElementById("user-avatar").textContent = data.user.avatar || initials;
+      document.getElementById("user-name").textContent = displayName;
       document.getElementById("user-role").textContent=data.user.role+" · "+data.user.department;
       init();
     } else {
@@ -783,7 +783,6 @@ function openViewFile(fileId){
   if(!file) return;
   currentViewFileData=file;
 
-  // Name (editable)
   renderViewerName(file);
 
   document.getElementById("view-file-size").textContent=file.size_display;
@@ -792,7 +791,6 @@ function openViewFile(fileId){
   document.getElementById("view-file-dept").textContent=file.department||"General";
   document.getElementById("view-file-date").textContent=new Date(file.uploaded_at).toLocaleString("es-ES");
 
-  // Preview
   const preview=document.getElementById("file-preview");
   const previewUrl=`${API}/preview/${file.id}`;
   const icon=FILE_ICONS[file.icon]||"📁";
@@ -817,21 +815,17 @@ function openViewFile(fileId){
     preview.innerHTML=`<div class="viewer-preview-placeholder"><div class="big-icon">${icon}</div><p>Sin previsualización · descarga el archivo para abrirlo</p></div>`;
   }
 
-  // Share
   document.getElementById("view-share-toggle").checked=file.is_public||false;
   updateViewShareUI(file);
 
-  // Tags
   const tagsSection=document.getElementById("view-file-tags-section");
   if(file.tags&&file.tags.length){
     tagsSection.style.display="block";
     document.getElementById("view-file-tags").innerHTML=file.tags.map(t=>`<span class="viewer-tag">${t}</span>`).join("");
   } else { tagsSection.style.display="none"; }
 
-  // Download
   document.getElementById("view-file-download-link").href=`${API}/download/${file.id}`;
 
-  // Star icon
   const starIcon=document.getElementById("view-star-icon");
   starIcon.setAttribute("fill",file.starred?"#f59e0b":"none");
   starIcon.setAttribute("stroke",file.starred?"#f59e0b":"currentColor");
@@ -890,7 +884,6 @@ function closeViewFile(){
   currentViewFileId=null; currentViewFileData=null;
 }
 
-// Close on ESC
 document.addEventListener("keydown",e=>{
   if(e.key==="Escape"&&document.getElementById("view-file-modal").style.display!=="none") closeViewFile();
 });
@@ -999,7 +992,6 @@ function startRenameFolder(oldName, btn){
   const nameSpan=item.querySelector(".folder-name-text");
   const countSpan=item.querySelector(".folder-count");
   const renameBtn=item.querySelector(".folder-rename-btn");
-  // Replace name span with input
   nameSpan.style.display="none";
   renameBtn.style.display="none";
   countSpan.style.display="none";
@@ -1110,7 +1102,7 @@ function showToast(msg,type=""){
   setTimeout(()=>el.remove(),3500);
 }
 
-// Close upload modal on backdrop click
+// Close modals on backdrop click
 document.getElementById("upload-modal").addEventListener("click",e=>{ if(e.target===document.getElementById("upload-modal")) closeUpload(); });
 document.getElementById("folder-modal").addEventListener("click",e=>{ if(e.target===document.getElementById("folder-modal")) document.getElementById("folder-modal").style.display="none"; });
 </script>
