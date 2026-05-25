@@ -131,6 +131,28 @@ def home():
         }
     })
 
+
+# =========================================
+# KEEP ALIVE / PING
+# =========================================
+
+@app.route("/ping", methods=["GET"])
+def ping():
+    try:
+        client.admin.command("ping")
+
+        return jsonify({
+            "status": "online",
+            "mongodb": "connected",
+            "time": datetime.now().isoformat()
+        })
+
+    except Exception as e:
+        return jsonify({
+            "status": "error",
+            "error": str(e)
+        }), 500
+
 # =========================================
 # SUBIR ARCHIVO  (almacena binario en MongoDB)
 # =========================================
